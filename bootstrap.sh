@@ -9,7 +9,7 @@ set -euo pipefail
 
 echo "=== bootstrap start: $(date -u +%FT%TZ) ==="
 
-LLAMA_BIN_URL="${LLAMA_BIN_URL:-https://github.com/tapirro/v100-qwen-artifacts/releases/download/v1/llama-server-v100-sm70.tar.gz}"
+LLAMA_BIN_URL="${LLAMA_BIN_URL:-https://github.com/tapirro/v100-qwen-artifacts/releases/download/v2/llama-server-v100-sm70-v2.tar.gz}"
 MODEL_REPO="${MODEL_REPO:-unsloth/Qwen3.6-35B-A3B-GGUF}"
 MODEL_FILE="${MODEL_FILE:-Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf}"
 
