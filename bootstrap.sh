@@ -49,22 +49,28 @@ time $HFCMD download "$MODEL_REPO" "$MODEL_FILE" --local-dir /workspace/models/q
 
 # -------- 4. Launch llama-server in tmux --------
 echo "[4/5] launching llama-server"
-export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:/workspace/llama-bin:${LD_LIBRARY_PATH:-}"
 
 # Kill any prior server/session
 tmux kill-session -t qwen 2>/dev/null || true
 pkill -9 -f llama-server 2>/dev/null || true
 sleep 2
 
-tmux new-session -d -s qwen "LD_LIBRARY_PATH='$LD_LIBRARY_PATH' /workspace/llama-bin/llama-server \
-  -m /workspace/models/q4kxl/$MODEL_FILE \
-  -c $TOTAL_CTX -np $NUM_PARALLEL -ngl 99 -fa on \
-  --cache-type-k $KV_QUANT --cache-type-v $KV_QUANT \
-  --fit off \
-  --slot-prompt-similarity 0.05 \
-  --cache-ram 16384 \
-  --host 0.0.0.0 --port 8080 --alias qwen3.6-35b-a3b \
-  > /workspace/llama-server.log 2>&1"
+# Write a launcher script (handles quoting + env cleanly inside tmux)
+cat > /workspace/launch_qwen.sh <<EOF
+#!/bin/bash
+export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:/workspace/llama-bin"
+exec /workspace/llama-bin/llama-server \\
+  -m /workspace/models/q4kxl/$MODEL_FILE \\
+  -c $TOTAL_CTX -np $NUM_PARALLEL -ngl 99 -fa on \\
+  --cache-type-k $KV_QUANT --cache-type-v $KV_QUANT \\
+  --fit off \\
+  --slot-prompt-similarity 0.05 \\
+  --cache-ram 16384 \\
+  --host 0.0.0.0 --port 8080 --alias qwen3.6-35b-a3b
+EOF
+chmod +x /workspace/launch_qwen.sh
+
+tmux new-session -d -s qwen "/workspace/launch_qwen.sh > /workspace/llama-server.log 2>&1"
 
 # -------- 5. Wait for health --------
 echo "[5/5] waiting for health"
